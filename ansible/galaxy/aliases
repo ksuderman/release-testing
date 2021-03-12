@@ -1,0 +1,2 @@
+alias centos="ssh -i ~/.ssh/release-testing-2101.pem centos@149.165.170.39"
+alias ubuntu="ssh -i ~/.ssh/release-testing-2101.pem ubuntu@149.165.168.15"

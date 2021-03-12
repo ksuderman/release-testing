@@ -1,0 +1,3 @@
+[galaxyservers]
+149.165.168.15 ansible_ssh_user=ubuntu
+

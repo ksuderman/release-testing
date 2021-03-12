@@ -1,0 +1,54 @@
+---
+- hosts: galaxyservers
+  become: true
+  remote_user: ubuntu
+  pre_tasks:
+    - name: RedHat/CentOS Dependencies
+      set_fact:
+        dependencies:
+        - python3
+        - python-psycopg2
+        - python3-psycopg2
+        - python-virtualenv
+        - python3-virtualenv
+      when: ansible_os_family == 'RedHat'
+    - name: Debian/Ubuntu Dependencies
+      set_fact:
+        dependencies:
+          - acl
+          - git
+          - tar
+          - make
+          - bzip2
+          - virtualenv
+          - cgroup-tools
+          - python3-psycopg2
+      when: ansible_os_family == 'Debian'
+    - name: Install Dependencies
+      package:
+        name: "{{ dependencies }}"
+        state: present
+  handlers:
+    - name: Restart Galaxy
+      systemd:
+        name: galaxy
+        state: restarted
+  roles:
+    - galaxyproject.repos
+    - galaxyproject.slurm
+    - galaxyproject.postgresql
+    - role: natefoo.postgresql_objects
+      become: true
+      become_user: postgres
+    - geerlingguy.pip
+    - galaxyproject.galaxy
+    - welcome_html
+    - role: uchida.miniconda
+      become: true
+      become_user: "{{ galaxy_user.name }}"
+    - usegalaxy_eu.galaxy_systemd
+    - galaxyproject.nginx
+  post_tasks:
+    - name: Install slurm-drmaa
+      package:
+        name: slurm-drmaa1

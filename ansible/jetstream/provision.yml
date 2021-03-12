@@ -1,0 +1,78 @@
+---
+- hosts: localhost
+  vars_files:
+    - vars/defaults.yml
+  tasks:
+  - name: Parse team members from the command line.
+    set_fact:
+      team: "{{ people.split(',') | list }}"
+    when: people is defined
+    tags: always
+  - name: Configure network resources
+    block:
+    - name: Create the security group
+      os_security_group:
+        name: "{{ firewall }}"
+        state: present
+    - name: Open ports
+      os_security_group_rule:
+        security_group: "{{ firewall }}"
+        protocol: tcp
+        port_range_min: "{{ item }}"
+        port_range_max: "{{ item }}"
+        remote_ip_prefix: 0.0.0.0/0
+      loop: [22, 80, 443, 4430, 8080]
+    - name: Create the release testing network.
+      os_network:
+        state: present
+        name: "{{ network_name }}"
+      register: r_net
+    - name: Save the network ID
+      template:
+        src:  templates/networks.yml.j2
+        dest: vars/networks.yml
+    - name: Creates a subnet
+      os_subnet:
+        state: present
+        network_name: "{{ network_name }}"
+        name: "{{ subnet_name }}"
+        cidr: 10.0.0.0/28
+    - name: Create the router
+      os_router:
+        state: present
+        name: "{{ router_name }}"
+        network: public
+        interfaces:
+          - "{{ subnet_name }}"
+    tags: network
+  - name: Import network ID
+    include_vars: vars/networks.yml
+    when: r_net is not defined
+    tags: [ servers ]
+  - name: Set the network ID fact
+    set_fact:
+      network_id: "{{ r_net.id }}"
+    when: r_net is defined
+    tags: [ servers ]
+  - name: Create the server for {{ item }}
+    os_server:
+      state: present
+      name: "{{ item }}-{{ type }}-2101"
+      image: "{{ images.ubuntu }}"
+      flavor: "{{ flavor }}"
+      key_name: "{{ keypair }}"
+      security_groups: "{{ firewall }}"
+      auto_ip: yes
+      nics:
+        - net-id: "{{ network_id }}"
+    register: os_servers
+    loop: "{{ team }}"
+    tags: [ servers ]
+  - name: Generate an inventory file for the new servers
+    vars:
+      ifile: inventory.ini
+      keypair_file: ./out/{{ keypair }}.pem
+    template:
+      src: templates/inventory.ini.j2
+      dest: inventories/{{ ifile }}
+    tags: [ servers ]

@@ -1,0 +1,18 @@
+- hosts: pulsarservers
+  pre_tasks:
+    - name: Install some packages
+      package:
+        name:
+          - build-essential
+          - git
+          - python3-dev
+          - libcurl4-openssl-dev
+          - libssl-dev
+          - virtualenv
+        state: present
+        update_cache: yes
+      become: yes
+  roles:
+    - role: galaxyproject.cvmfs
+      become: yes
+    - galaxyproject.pulsar

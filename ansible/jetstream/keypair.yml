@@ -1,0 +1,26 @@
+---
+- hosts: localhost
+  vars_files:
+    - vars/defaults.yml
+  tasks:
+    - name: Generate and save a private/public keypair
+      block:
+      - name: Generate a private/public keypair
+        os_keypair:
+          name: "{{ keypair }}"
+          state: present
+        register: kp
+      - name: Save the private key
+        template:
+          src: templates/keypair.pem.j2
+          dest: ~/.ssh/{{ keypair }}.pem
+          mode: 0400
+    - name: Delete a previously generated keypair
+      os_keypair:
+        name: "{{ keypair }}"
+        state: absent
+      tags: [never, cleanup]
+    - name: Remove the local .pem file
+      file:
+        path: ~/.ssh/{{ keypair }}.pem
+        state: absent

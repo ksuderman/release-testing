@@ -1,0 +1,17 @@
+- hosts: galaxyservers
+  become: true
+  tasks:
+  - name: Create the wheel group
+    group:
+      name: wheel
+      state: present
+  - name: Passwordless sudo for the wheel group
+    copy:
+      content: '%wheel ALL=(ALL:ALL) NOPASSWD:ALL'
+      dest: /etc/sudoers.d/wheel_nopasswd
+      mode: 0440
+  - name: Create the test user
+    user:
+      name: suderman
+      password: "{{ lookup('password', './out/passwordfile length=16') | password_hash('sha512')  }}"
+      group: wheel

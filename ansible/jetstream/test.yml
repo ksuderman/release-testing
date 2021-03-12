@@ -1,0 +1,21 @@
+---
+- hosts: localhost
+  tasks:
+    - name: get date
+      vars:
+        timestamp: "ks-testing-{{ ansible_date_time.date }}-stuff"
+      debug:
+        msg: "Timestamp is {{ timestamp }}"
+#    - name: Parse directory names from the command line
+#      set_fact:
+#        directories: "{{ dirs.split(',') | list }}"
+#      when: dirs is defined
+#    - name: List directories
+#      shell: ls -l /Users/suderman/{{ item }}
+#      loop: "{{ directories }}"
+#      register: reg_loop
+#    - name: Save the result
+#      debug:
+#        var: reg_loop
+
+

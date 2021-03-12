@@ -1,0 +1,17 @@
+---
+prefix: ks
+type: testing
+release: "{{ ansible_date_time.date }}"
+base_name: "{{ prefix }}-{{ type }}-{{ release }}"
+network_name: "{{ base_name }}-network"
+subnet_name: "{{ base_name }}-subnet"
+router_name: "{{ base_name }}-router"
+keypair: "{{ base_name }}"
+flavor: m1.large
+firewall: "{{ base_name }}"
+team:
+  - keith
+images:
+  centos: 4e769e39-2ffa-4c64-99f6-404fd52cc85e
+  ubuntu: 8bc9412c-e666-40fa-8254-f8481e344a49
+image: 46794408-6a80-44b1-bf5a-405127753f43

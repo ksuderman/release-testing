@@ -1,0 +1,42 @@
+---
+- hosts: localhost
+  vars_files:
+    - vars/defaults.yml
+  tasks:
+    - name: Parse team from command line
+      set_fact:
+        team: "{{ people.split(',') | list }}"
+      when: people is defined
+      tags: always
+    - name: Remove CentOS instances
+      os_server:
+        name: "{{ item }}-centos-2101"
+        state: absent
+      loop: "{{ team }}"
+      tags: [servers,centos]
+    - name: Remove Ubuntu instances
+      os_server:
+        name: "{{ item }}-{{ type }}-2101"
+        state: absent
+      loop: "{{ team }}"
+      tags: [servers,ubuntu]
+    - name: Remove the router
+      os_router:
+        name: "{{ router_name }}"
+        state: absent
+      tags: network
+    - name: Remove the subnet
+      os_subnet:
+        name: "{{ subnet_name }}"
+        state: absent
+      tags: network
+    - name: Remove the network
+      os_network:
+        name: "{{ network_name }}"
+        state: absent
+      tags: network
+    - name: Remove the network ID var file
+      file:
+        path: vars/networks.yml
+        state: absent
+

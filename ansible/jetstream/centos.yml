@@ -1,0 +1,14 @@
+# Currently unused.
+  - name: Create Centos instances
+    os_server:
+      state: present
+      name: "{{ item }}-centos-2101"
+      image: "{{ images.centos }}"
+      flavor: "{{ flavor }}"
+      key_name: "{{ keypair }}"
+      security_groups: "{{ firewall }}"
+      auto_ip: yes
+      nics:
+        - net-id: "{{ network_id }}"
+    loop: "{{ team }}"
+    tags: [centos, servers]

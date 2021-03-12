@@ -1,0 +1,23 @@
+---
+- name: Create the server for {{ user_name }}
+  os_server:
+    state: present
+    name: "{{ user_name }}-galaxy-2101"
+    image: "{{ images.ubuntu }}"
+    flavor: "{{ flavor }}"
+    key_name: "{{ keypair }}"
+    security_groups: "{{ firewall }}"
+    auto_ip: yes
+    nics:
+      - net-id: "{{ network_id }}"
+  register: os_servers
+  tags: [servers,ubuntu]
+- name: Save server IP
+  copy:
+    content: "{{ os_servers.server.interface_ip }}"
+    dest: /tmp/{{ user_name }}.txt
+  tags: [servers,ubuntu]
+- name: Display IP assigned to server
+  debug:
+    var: "{{ os_servers.server.interface_ip }}"
+  tags: [servers,ubuntu]
