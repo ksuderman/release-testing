@@ -1,18 +1,15 @@
 ---
 prefix: ks
 type: rke-cluster
-release: "{{ ansible_date_time.date }}"
-#release: 2101
+#release: "{{ ansible_date_time.date }}"
+release: 03-14-21
 base_name: "{{ prefix }}-{{ type }}-{{ release }}"
-network_name: "{{ base_name }}"
 keypair: ks-cluster
 master_flavor: m1.quad
 flavor: m1.medium
 firewall: ks-rancher-firewall
-team:
-  - keith
 workers: 1
 images:
   centos: 4e769e39-2ffa-4c64-99f6-404fd52cc85e
   ubuntu: 8bc9412c-e666-40fa-8254-f8481e344a49
-image: 46794408-6a80-44b1-bf5a-405127753f43
+image: 8bc9412c-e666-40fa-8254-f8481e344a49

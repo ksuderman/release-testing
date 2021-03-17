@@ -1,21 +1,14 @@
 ---
 - hosts: localhost
+  vars:
+    config: defaults
+  vars_files:
+    - vars/{{ config }}.yml
   tasks:
-    - name: get date
-      vars:
-        timestamp: "ks-testing-{{ ansible_date_time.date }}-stuff"
+    - name: Print the config name we are using
       debug:
-        msg: "Timestamp is {{ timestamp }}"
-#    - name: Parse directory names from the command line
-#      set_fact:
-#        directories: "{{ dirs.split(',') | list }}"
-#      when: dirs is defined
-#    - name: List directories
-#      shell: ls -l /Users/suderman/{{ item }}
-#      loop: "{{ directories }}"
-#      register: reg_loop
-#    - name: Save the result
-#      debug:
-#        var: reg_loop
-
+        msg: "Config: {{ config }}"
+    - name: Print a value from the config.
+      debug:
+        msg: "Releaese value: {{ release }}"
 

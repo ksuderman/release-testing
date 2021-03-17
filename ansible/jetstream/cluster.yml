@@ -1,0 +1,52 @@
+---
+- name: Provision a cluster
+  hosts: localhost
+  vars_files:
+    - vars/cluster.yml
+    - vars/networks.yml
+  tasks:
+    - name: Create controller and agent VMs
+      block:
+      - name: Creating master VM
+        os_server:
+          state: present
+          name: "ks-rke-leader"
+          image: "{{ images.ubuntu }}"
+          flavor: "{{ master_flavor }}"
+          key_name: "{{ keypair }}"
+          security_groups: "{{ firewall }}"
+          auto_ip: yes
+          nics:
+            - net-id: "{{ network_id }}"
+        register: os_leader
+      - name: Creating worker VMs
+        os_server:
+          state: present
+          name: "ks-rke-worker-{{ item }}"
+          image: "{{ images.ubuntu }}"
+          flavor: "{{ flavor }}"
+          key_name: "{{ keypair }}"
+          security_groups: "{{ firewall }}"
+          auto_ip: yes
+          nics:
+            - net-id: "{{ network_id }}"
+        loop: "{{ range(1, workers|int + 1)|list }}"
+        register: os_workers
+      - name: Generate an inventory file for the new servers
+        vars:
+          ifile: "{{ base_name }}.ini"
+          keypair_file: ~/.ssh/{{ keypair }}.pem
+        template:
+          src: templates/rancher.ini.j2
+          dest: inventories/{{ ifile }}
+    - name: Cleanup the cluster
+      tags: [never, cleanup, clean]
+      block:
+        - name: Delete the controller VM
+          os_server:
+            name: "ks-rke-leader"
+        - name: Delete the worker nodes
+          os_server:
+            name: ks-rke-worker-{{ item }}
+            state: absent
+          loop: "{{ range(1, workers|int + 1)|list }}"

@@ -8,6 +8,9 @@
 {{ item.server.name }} ansible_ssh_host={{ item.server.interface_ip }}
 {% endfor %}
 
+[reboot:children]
+galaxyservers
+
 [galaxyservers:vars]
 ansible_ssh_user=ubuntu
 ansible_python_interpreter=/usr/bin/python3

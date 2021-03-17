@@ -1,0 +1,41 @@
+---
+- hosts: localhost
+  vars:
+    network: ks-network
+  tasks:
+    - name: Provision the network
+      block:
+      - name: Create a testing network.
+        os_network:
+          state: present
+          name: "{{ network }}"
+        register: r_net
+      - name: Save the network ID
+        template:
+          src:  templates/networks.yml.j2
+          dest: vars/networks.yml
+      - name: Creates a subnet
+        os_subnet:
+          state: present
+          network_name: "{{ network }}"
+          name: "{{ network }}-subnet"
+          cidr: 10.0.0.0/28
+      - name: Create the router
+        os_router:
+          state: present
+          name: "{{ network }}-router"
+          network: public
+          interfaces:
+            - "{{ network }}-subnet"
+      tags: always
+    - name: Tearing down the network
+      block:
+      - name: Delete the router
+        os_router:
+          name: "{{ network }}-router"
+          state: absent
+      - name: Delete the network
+        os_network:
+          name: "{{ network }}"
+          state: absent
+      tags: [ never,cleanup,clean ]

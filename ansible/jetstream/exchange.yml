@@ -1,0 +1,28 @@
+---
+- name: Exchange SSH keys between servers.
+  hosts: galaxyservers
+  tasks:
+    - name: Generate 4096 bit RSA keys.
+      shell:
+        cmd: ssh-keygen -t rsa -b 4096 -f ~/.ssh/id_rsa
+        creates: ~/.ssh/id_rsa
+    -  name: Gather all the keys
+       fetch:
+         src: "~/.ssh/id_rsa.pub"
+         dest: /tmp/{{ ansible_hostname }}-id_rsa.pub
+         flat: yes
+    - name: Distribute the keys
+      authorized_key:
+        user: ubuntu
+        state: present
+        key: "{{ lookup('file', '/tmp/{{ item}}-id_rsa.pub') }}"
+      when: "item|string != ansible_hostname|string"
+      loop: "{{ groups['galaxyservers'] }}"
+- name: Remove the keys in /tmp
+  hosts: localhost
+  tasks:
+    -name: Remove the keys we downloaded.
+     file:
+       path: /tmp/{{ item }}-id_rsa.pub
+       state: absent
+    loop: "{{ groups['galaxyservers'] }}

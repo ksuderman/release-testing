@@ -71,7 +71,7 @@
   - name: Generate an inventory file for the new servers
     vars:
       ifile: inventory.ini
-      keypair_file: ./out/{{ keypair }}.pem
+      keypair_file: ~/.ssh/{{ keypair }}.pem
     template:
       src: templates/inventory.ini.j2
       dest: inventories/{{ ifile }}

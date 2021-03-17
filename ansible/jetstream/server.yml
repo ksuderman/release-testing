@@ -1,23 +1,38 @@
 ---
-- name: Create the server for {{ user_name }}
-  os_server:
-    state: present
-    name: "{{ user_name }}-galaxy-2101"
-    image: "{{ images.ubuntu }}"
-    flavor: "{{ flavor }}"
-    key_name: "{{ keypair }}"
-    security_groups: "{{ firewall }}"
-    auto_ip: yes
-    nics:
-      - net-id: "{{ network_id }}"
-  register: os_servers
-  tags: [servers,ubuntu]
-- name: Save server IP
-  copy:
-    content: "{{ os_servers.server.interface_ip }}"
-    dest: /tmp/{{ user_name }}.txt
-  tags: [servers,ubuntu]
-- name: Display IP assigned to server
-  debug:
-    var: "{{ os_servers.server.interface_ip }}"
-  tags: [servers,ubuntu]
+- hosts: localhost
+  vars:
+    inventory: single-node-cluster.ini
+    server: ks-server
+  vars_files:
+    - vars/defaults.yml
+    - vars/networks.yml
+  tasks:
+    - name: Create the server
+      block:
+        - name: Create the server for {{ server }}
+          os_server:
+            state: present
+            name: "{{ server }}"
+            image: "{{ images.ubuntu }}"
+            flavor: "{{ flavor }}"
+            key_name: "{{ keypair }}"
+            security_groups: "{{ firewall }}"
+            auto_ip: yes
+            nics:
+              - net-id: "{{ network_id }}"
+          register: rc
+        - name: Generate the inventory
+          template:
+            src: templates/single-node-cluster.ini.j2
+            dest: inventories/{{ inventory }}
+        - name: Display IP assigned to server
+          debug:
+            msg: "Server IP:  {{ rc.server.interface_ip }}"
+    - name: Cleanup
+      block:
+        - name: Delete the server
+          os_server:
+            name: "{{ server }}"
+            state: absent
+      tags: [never, cleanup, clean]
+
