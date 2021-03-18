@@ -1,0 +1,9 @@
+---
+inventory: reboot.ini
+server: ks-reboot-test
+keypair: ks-cluster
+flavor: m1.tiny
+firewall: ks-rancher-firewall
+images:
+  centos: 4e769e39-2ffa-4c64-99f6-404fd52cc85e
+  ubuntu: 8bc9412c-e666-40fa-8254-f8481e344a49

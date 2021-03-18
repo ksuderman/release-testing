@@ -1,8 +1,11 @@
 ---
 - name: Provision a cluster
   hosts: localhost
+  vars:
+    config: cluster
+    inventory: cluster.ini
   vars_files:
-    - vars/cluster.yml
+    - configs/{{ config }}.yml
     - vars/networks.yml
   tasks:
     - name: Create controller and agent VMs
@@ -34,11 +37,10 @@
         register: os_workers
       - name: Generate an inventory file for the new servers
         vars:
-          ifile: "{{ base_name }}.ini"
           keypair_file: ~/.ssh/{{ keypair }}.pem
         template:
           src: templates/rancher.ini.j2
-          dest: inventories/{{ ifile }}
+          dest: inventories/{{ inventory }}
     - name: Cleanup the cluster
       tags: [never, cleanup, clean]
       block:

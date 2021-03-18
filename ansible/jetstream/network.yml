@@ -27,7 +27,6 @@
           network: public
           interfaces:
             - "{{ network }}-subnet"
-      tags: always
     - name: Tearing down the network
       block:
       - name: Delete the router
@@ -38,4 +37,4 @@
         os_network:
           name: "{{ network }}"
           state: absent
-      tags: [ never,cleanup,clean ]
+      tags: [ never, cleanup, clean ]

@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+DESTINATION=../../../cloudman-boot/inventory
+
+if [[ -z "$1" ]] ; then
+	echo "SYNOPSIS"
+	echo "    Copies an inventory file to the cloudman-boot directory"
+	echo ""
+	echo "USAGE"
+	echo "    $> cpini <file>"
+	echo 
+	echo "NOTES"
+	echo "    1. Do not include the .ini file extention."
+	echo "    2. The inventory file will be copied from inventory/"
+	echo "       to $DESTINATION"
+	echo
+	exit
+fi
+
+cp inventories/$1.ini $DESTINATION
