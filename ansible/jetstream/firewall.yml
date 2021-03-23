@@ -2,14 +2,10 @@
 - hosts: localhost
   vars:
     firewall: ks-rancher-firewall
-    port_numbers: [ 22, 80, 443, 2379, 2380, 6443, 8472, 9099, 10250, 10254 ]
+    ports: "22 80 443 2379 2380 6443 8472 9099 10250 10254"
   tasks:
   - name: Configure the firewall
     block:
-    - name: Parse port numbers from the command line.
-      set_fact:
-        port_numbers: "{{ ports.split(',') | list }}"
-      when: ports is defined
     - name: Create the security group
       os_security_group:
         name: "{{ firewall }}"
@@ -21,8 +17,12 @@
         port_range_min: "{{ item }}"
         port_range_max: "{{ item }}"
         remote_ip_prefix: 0.0.0.0/0
-      loop: "{{ port_numbers }}"
-    tags: always
+      loop: "{{ ports.split(' ') | list }}"
+    - name: Add the security group to itself.
+      os_security_group_rule:
+        security_group: "{{ firewall }}"
+        remote_group: "{{ firewall }}"
+        protocol: tcp
   - name: Delete the security group.
     block:
       - os_security_group:

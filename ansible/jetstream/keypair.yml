@@ -1,7 +1,7 @@
 ---
 - hosts: localhost
-  vars_files:
-    - vars/defaults.yml
+  vars:
+    keypair: ks-cluster
   tasks:
     - name: Generate and save a private/public keypair
       block:
@@ -10,18 +10,19 @@
           name: "{{ keypair }}"
           state: present
         register: kp
-      - name: Save the private key
+      - name: Save the private key to ~/.ssh
         template:
           src: templates/keypair.pem.j2
           dest: ~/.ssh/{{ keypair }}.pem
           mode: 0400
-    - name: Delete a previously generated keypair
-      os_keypair:
-        name: "{{ keypair }}"
-        state: absent
-      tags: [never, cleanup]
-    - name: Remove the local .pem file
-      file:
-        path: ~/.ssh/{{ keypair }}.pem
-        state: absent
-      tags: [never,cleanup]
+    - name: Cleanup the keypair
+      block:
+      - name: Delete the keypair on Jetstream
+        os_keypair:
+          name: "{{ keypair }}"
+          state: absent
+      - name: Remove the local .pem file
+        file:
+          path: ~/.ssh/{{ keypair }}.pem
+          state: absent
+      tags: [never, cleanup, clean]

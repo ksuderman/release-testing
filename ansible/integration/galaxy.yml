@@ -1,0 +1,31 @@
+---
+- hosts: controllers[0]
+  collections:
+    - kubernetes.core
+  tasks:
+    - name: Clone the Git repository
+      git:
+        repo: https://github.com/ksuderman/galaxy-helm.git
+        dest: /tmp/galaxy-helm
+    - name: Update Helm dependencies
+      shell:
+        cmd: helm dependency update
+        chdir: /tmp/galaxy-helm/galaxy
+    - name: Our local configuration
+      copy:
+        dest: /tmp/values.yml
+        content: |
+          persitence:
+            storageClass: nfs
+          postgresql:
+            galaxyDatabasePassword: galaxydbpassword
+          metrics:
+            enabled: false
+    - name: Install Galaxy with the Helm chart.
+      helm:
+        name: galaxy
+        namespace: default
+        chart_ref: /tmp/galaxy-helm/galaxy
+        values_files:
+          - /tmp/galaxy-helm/galaxy/values.yaml
+          - /tmp/values.yml

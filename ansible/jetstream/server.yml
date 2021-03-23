@@ -1,10 +1,9 @@
 ---
 - hosts: localhost
   vars:
-    inventory: single-node-cluster.ini
-    server: ks-server
+    config: server
   vars_files:
-    - vars/defaults.yml
+    - configs/{{ config }}.yml
     - vars/networks.yml
   tasks:
     - name: Create the server
@@ -30,7 +29,7 @@
             msg: "Server IP:  {{ rc.server.interface_ip }}"
     - name: Cleanup
       block:
-        - name: Delete the server
+        - name: Delete the server {{ server }}
           os_server:
             name: "{{ server }}"
             state: absent
