@@ -38,3 +38,10 @@ Accessing http://localhost:8000 will now access port 80 in the pod.
 gcloud projects list
 ```
 
+## Helm
+
+```
+helm repo index /path/to/charts/
+helm package /path/to/chart
+```
+
