@@ -1,15 +1,16 @@
-from settings import *
-from provider import *
+from settings import AWS
+# from provider import *
 from cloudbridge.interfaces.resources import TrafficDirection
 
-def provision_network():
-    network = provider.networking.networks.create(cidr_block='10.0.0.0/16', label=network_name)
+def provision_network(cloud, name):
+    cloud = AWS('ks', 'testing')
+    network = cloud.provider.networking.networks.create(cidr_block='10.0.0.0/16', label=cloud.network)
     print(network)
     subnet = network.subnets.create(
-        cidr_block='10.0.0.0/28', label=subnet_name)
+        cidr_block='10.0.0.0/28', label=cloud.subnet)
     print(subnet)
 
-    router = provider.networking.routers.create(network=network, label=router_name)
+    router = cloud.provider.networking.routers.create(network=network, label=cloud.project)
     print(router)
     router.attach_subnet(subnet)
     print("attached subnet")
@@ -19,10 +20,10 @@ def provision_network():
     router.attach_gateway(gateway)
     print("attached gateway")
 
-    walls = provider.security.vm_firewalls.find(label=firewall_name)
+    walls = cloud.provider.security.vm_firewalls.find(label=cloud.firewall)
     if walls is None or len(walls) == 0:
-        fw = provider.security.vm_firewalls.create(
-            label=firewall_name, description='Firewall rules for the release-testing network', network=network_name)
+        fw = cloud.provider.security.vm_firewalls.create(
+            label=cloud.firewall, description='Firewall rules for the release-testing network', network=cloud.network)
         print(fw)
         fw.rules.create(TrafficDirection.INBOUND, 'tcp', 22, 22, '0.0.0.0/0')
         fw.rules.create(TrafficDirection.INBOUND, 'tcp', 443, 443, '0.0.0.0/0')

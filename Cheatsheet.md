@@ -32,3 +32,9 @@ kubectl port-forward <pod_id> <8000>:<80>
 ```
 Accessing http://localhost:8000 will now access port 80 in the pod.
 
+## Google Cloud
+
+```
+gcloud projects list
+```
+
