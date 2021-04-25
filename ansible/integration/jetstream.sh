@@ -4,14 +4,14 @@ if [[ -z "$KEY" ]] ; then
   KEY=~/.ssh/ks-cluster.pem
 fi
 
-set -u
+set -eu
 
 BASE=~/Workspaces/JHU
-JETSTREAM_PLAYBOOKS=~/Workspaces/JHU/release-testing/ansible/jetstream
+JETSTREAM_PLAYBOOKS=~/Workspaces/JHU/release-testing-git/ansible/jetstream
 CLOUDBOOT_PLAYBOOKS=~/Workspaces/JHU/cloudman-boot/
 GALAXY_HELM_PLAYBOOK=~/Workspaces/JHU/release-testing/ansible/integration
 
-INI=jetstream-cluster.ini
+INI=cluster.ini
 INVENTORY=$JETSTREAM_PLAYBOOKS/inventories/$INI
 CLUSTER_CONFIG=$JETSTREAM_PLAYBOOKS/configs/jetstream-integration.yml
 
@@ -20,6 +20,7 @@ cat << EOF > $CLUSTER_CONFIG
 inventory: $INI
 server: ks-rke-integration
 keypair: ks-cluster
+master_flavor: m1.quad
 flavor: m1.medium
 firewall: ks-rancher-firewall
 images:
@@ -29,7 +30,10 @@ EOF
 
 # Provision the cluster on Jetstream
 cd $JETSTREAM_PLAYBOOKS
-ansible-playbook server.yml -e config=jetstream-integration
+pwd
+ls
+#ansible-playbook server.yml -e config=jetstream-integration
+ansible-playbook cluster.yml -e config=jetstream-integration
 
 # Establish an SSH connection to the server so nothing later complains
 # about new servers or unknown certificates.

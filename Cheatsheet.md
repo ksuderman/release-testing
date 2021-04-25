@@ -32,3 +32,12 @@ kubectl port-forward <pod_id> <8000>:<80>
 ```
 Accessing http://localhost:8000 will now access port 80 in the pod.
 
+
+
+## Helm
+
+```
+helm repo index /path/to/charts/
+helm package /path/to/chart
+```
+

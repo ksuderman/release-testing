@@ -1,6 +1,7 @@
-inventory: jetstream-cluster.ini
+inventory: cluster.ini
 server: ks-rke-integration
 keypair: ks-cluster
+master_flavor: m1.quad
 flavor: m1.medium
 firewall: ks-rancher-firewall
 images:
