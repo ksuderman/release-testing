@@ -188,28 +188,37 @@ class Cloud:
 
     def tear_down_from_file(self, config):
         with open(config) as f:
-            data = yaml.safe_load(config)
+            print(f'Loading {config}')
+            data = yaml.safe_load(f)
 
-        fw = self.provider.security.vm_firewalls.get(data['firewall'])
+        fw_id = data['firewall']
+        fw = self.provider.security.vm_firewalls.get(fw_id)
         if fw is not None:
             fw.delete()
             logger.info('Deleted the firewall %s', fw.id)
 
         network = self.provider.networking.networks.get(data['network'])
         router = self.provider.networking.routers.get(data['router'])
-        for subnet in network.subnets:
-            logger.info('Deleting subnet %s' % subnet.id)
-            router.detach_subnet(subnet)
-            subnet.delete()
-        for gw in network.gateways:
-            logger.info("Deleting gateway %s" % gw.id)
-            router.detach_gateway(gw)
-            gw.delete()
-        logger.info('Deleting the router %s' % router.id)
-        router.delete()
-        logger.info('Deleting the network %s' % network.id)
-        network.delete()
+        if network:
+            for subnet in network.subnets:
+                logger.info('Deleting subnet %s' % subnet.id)
+                if router:
+                    router.detach_subnet(subnet)
+                subnet.delete()
+            for gw in network.gateways:
+                logger.info("Deleting gateway %s" % gw)
+                if router:
+                    router.detach_gateway(gw)
+                gw.delete()
+        if router is not None:
+            logger.info('Deleting the router %s' % router.id)
+            router.delete()
 
+        if network is not None:
+            logger.info('Deleting the network %s' % network.id)
+            network.delete()
+        print(f"Removing config {config}")
+        os.remove(config)
 
     def tear_down(self, name):
         logger.info('Tearing down cloud network infrastructure for %s' % name)
