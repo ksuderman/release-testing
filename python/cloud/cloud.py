@@ -63,7 +63,11 @@ def instance_delete(cloud, options):
 
 
 def instance_list(cloud, options):
-    print("instance_list")
+    # print("instance_list")
+    print('Instances:')
+    for instance in cloud.provider.compute.instances.list():
+        print(f'    {instance.id} - {instance.label}')
+    print()
 
 def image_set(cloud, options):
     if len(options) != 1:
@@ -140,7 +144,8 @@ BOLD = '\033[1m'
 def bold(s):
     return BOLD + s + END
 
-help_text = f'''{bold('SYNOPSIS')}
+help_text = f'''
+{bold('SYNOPSIS')}
     Managed resources on any cloud infrastucture supported by Cloudbridge.
     
 {bold('USAGE')}
@@ -154,26 +159,54 @@ help_text = f'''{bold('SYNOPSIS')}
     debugging and testing.
     
 {bold('RESOURCE')}
-    {bold('- network')}
-      {bold('- create <name>')}  Creates a network, subnet, router, gateway and 
-        firewall (security group) using the given name.
-      {bold('- delete <name>')} Deletes all network infrastructure for the given name.
-      {bold('- list')}
-    - keypair
-      - create
-      - delete
-      - list 
-    - instance
-      - create
-      - delete
-      - list 
-    - cluster
-      Reserved for future use.
-    - image
-    - vm
+    - {bold('network')}
+      - {bold('create <name>')}  Creates a network, subnet, router, gateway and 
+            firewall (security group) using the given name.
+      - {bold('delete <name>')} Deletes all network infrastructure for the given name.
+      - {bold('list')} List all configured networks
+    - {bold ('keypair')}
+      - {bold('create <name>')} Generates a new keypair.  The private key will 
+            be downloaded to your ~/.ssh directory. This is the only time you 
+            will be able to download the private key. 
+      - {bold('delete <name>')} Deletes a keypair from the server and the 
+            local private key in ~/.ssh. Once a keypair has been deleted any 
+            instances configured to use that keypair will be unaccessible.
+      - {bold('list')} Lists a keypairs available.
+    - {bold('instance')}
+      - {bold('create [-k|--key-pair] key.pem [-n|--name] <name>')} provisions 
+            a new server instance.
+      - {bold('delete <name>')} Decommisions a running instance.
+      - {bold('list')} Lists all running instances
+    - {bold('cluster')}
+          Reserved for future use.
+    - {bold('image')}
+      - {bold('get')} Displays the image ID that will be used to provision
+            instances.
+      - {bold('set <image id>')} Set the image ID to be used to provision
+            instances.
+    - {bold('vm')}
+      - {bold('get')}  Displays the VM type that will be used to provision
+            instances.
+      - {bold('set <vm type>')} Set the VM type that will be used to provision
+            instances.
+        
+{bold('EXAMPLES')}
+
+    {bold('$>')} ./cloud.py aws network create my-network        
+    {bold('$>')} ./cloud.py openstack network create my-network
+    {bold('$>')} ./cloud.py gcp keypair create my-keypair
+    {bold('$>')} ./cloud.py openstack vm set m1.xlarge        
         
 {bold('NOTES')}
 
+    The first three parameters; cloud, resource, and command, can be specified
+    in any order.  That is, the following commands are all functionally 
+    equivalent:
+    
+    {bold('$>')} ./cloud.py aws network create my-network
+    {bold('$>')} ./cloud.py create aws network my-network
+    {bold('$>')} ./cloud.py network create aws my-network
+    
 '''
 
 def help():
