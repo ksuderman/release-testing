@@ -13,9 +13,18 @@ kubectl config use-context gke_anvil-and-terra-development_us-east1-b_keith-rel-
 ### Common Commands
 ```
 kubectl get pods
+kubectl get deployments
+kubectl get events
+kubectl get services
+
 kubectl descibe pod <pod_id>
 kubectl logs <pod_id>
 kubectl logs -f <pod_id>
+
+kubectl create deployment hello-node --image=k8s.gcr.io/echoserver:1.4
+kubectl expose deployment hello-node --type=LoadBalancer --port=8080
+kubectl delete service hello-node
+kubectl delete deployment hello-node
 ```
 
 ### Attach to a container
@@ -41,7 +50,14 @@ gcloud projects list
 ## Helm
 
 ```
+helm dependency update
+helm dep up
+
 helm repo index /path/to/charts/
+helm repo index --url=https://ksuderman.github.io/helm_charts/ /path/to/chart
+helm repo add https://ksuderman.github.io/helm_charts/
+helm repo list
+
 helm package /path/to/chart
 ```
 

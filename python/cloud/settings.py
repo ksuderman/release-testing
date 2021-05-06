@@ -167,10 +167,11 @@ class Cloud:
     def safe_delete(self, resource):
         if resource is None:
             return
-        try:
+        # try:
+            # print(f'Deleting resource {resource.id}')
             resource.delete()
-        except:
-            print("Unexpected error deleting resource:", sys.exc_info()[0])
+        # except:
+        #     print("Unexpected error deleting resource:", sys.exc_info()[0])
 
 
     def get_networking_metadata(self, name):
@@ -288,29 +289,62 @@ class Cloud:
     def firewalls(self):
         return self.provider.security.vm_firewalls.find(label=self.name)
 
-    def create_instance(self, name):
-        if self.network is None:
-            logger.warning(f'Please provision the network before attempting to launch instances')
+    def create_instance(self, name, keypair, cluster):
+        # if self.network is None:
+        #     logger.warning(f'Please provision the network before attempting to launch instances')
+        #     return
+        config = os.path.join(self.cluster_dir, cluster, self.conf_file)
+        if not os.path.exists(config):
+            logger.error(f'No configuration found for {config}')
             return
+
+        with open(config, 'r') as f:
+            data = yaml.safe_load(f)
+
+        fw = self.provider.security.vm_firewalls.get(data['firewall'])
+        if fw is None:
+            logger.error('Unable to locate the firewall')
+            return
+        network = self.provider.networking.networks.get(data['network'])
+        subnet = network.subnets.get(data['subnet'])
+        kp = self.provider.security.key_pairs.get(keypair)
+        if kp is None:
+            logger.error('No such keypair: %s' % keypair)
+            return
+
         logger.info('Creating instance %s', name)
         instance = self.provider.compute.instances.create(
-            image=self.image, vm_type=self.vm, label=self.name + "-" + name,
-            subnet=self.subnet, key_pair=self.keypair, vm_firewalls=[self.firewall])
-        print(instance)
+            image=self.image, vm_type=self.vm, label=cluster + "-" + name,
+            subnet=subnet, key_pair=kp, vm_firewalls=[fw])
+
+        # print(instance)
         # Wait until ready
+        logger.debug('Waiting for the instance to come up.')
         instance.wait_till_ready()  # This is a blocking call
         if not instance.public_ips:
-            fip = self.gateway.floating_ips.create()
+            igw = network.gateways.get_or_create()
+            # fip = self.gateway.floating_ips.create()
+            fip = igw.floating_ips.create()
             instance.add_floating_ip(fip)
             instance.refresh()
-        self.instances.append(instance)
+            logger.info('Assigned Floating IP %s' % fip)
 
         logger.info('Instance created')
         return instance
 
     def delete_instance(self, name):
-        instance = self.provider.compute.instances.find(label=self.name + '-' + name)
-        self.safe_delete(instance)
+        instances = self.provider.compute.instances.find(label=name)
+        if instances is None or len(instances) == 0:
+            print("No such instance found.")
+            return
+        if len(instances) == 1:
+            print(f'Deleting instance {instances[0].id}')
+            instances[0].delete()
+        else:
+            print('Found the following instances')
+            for instance in instances:
+                print(f'    {instance.id}')
+            print()
 
     def get_keypair(self, name=None):
         if name is None:
@@ -342,7 +376,7 @@ class Cloud:
 
     def load_config(self):
         # path = f'~/.cloudbridge/{filename}'
-        path = os.path.join(self.conf_dir, self.conf_file)
+        path = os.path.join(self.conf_dir, self.name + 'yml')
         if not os.path.exists(path):
             data = {
                 'image': self.image,
@@ -362,7 +396,7 @@ class Cloud:
             'image': self.image,
             'vm': self.vm
         }
-        path = os.path.join(self.conf_dir, self.conf_file)
+        path = os.path.join(self.conf_dir, self.name + 'yml')
         with open(path, 'w') as f:
             yaml.safe_dump(data, f)
             print(f'Wrote {path}')
@@ -373,8 +407,7 @@ class OpenStack(Cloud):
         super().__init__(ProviderList.OPENSTACK, config)
         self.image = '46794408-6a80-44b1-bf5a-405127753f43'
         self.vm = 'm1.medium'
-        # self.conf_file = os.path.join(self.conf_dir, 'openstack.yml')
-        self.conf_file = 'openstack.yml'
+        self.name = 'openstack'
         self.load_config()
 
 
@@ -383,8 +416,7 @@ class AWS(Cloud):
         super().__init__(ProviderList.AWS, config)
         self.image = 'ami-042e8287309f5df03' # 'ami-0bb4f114a1e805434'
         self.vm = 't2.2xlarge'
-        # self.conf_file = os.path.join(self.conf_dir, 'aws.yml')
-        self.conf_file = 'aws.yml'
+        self.name = 'aws'
         self.load_config()
 
 
@@ -393,13 +425,13 @@ class GCP(Cloud):
         super().__init__(ProviderList.GCP, config)
         self.image = None
         self.vm = None
-        # self.conf_file = os.path.join(self.conf_dir, 'gcp.yml')
-        self.conf_file = 'gcp.yml'
+        self.name = 'gcp'
         self.load_config()
+
 
 class Mock(Cloud):
     def __init__(self, config={}):
         super().__init__(ProviderList.MOCK, config)
         self.image = None
         self.vm = None
-        self.conf_file = 'mock.yml'
+        self.name = 'mock'
