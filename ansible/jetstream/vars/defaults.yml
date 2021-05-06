@@ -1,6 +1,6 @@
 ---
 prefix: ks
-type: rke-cluster
+type: helm-test
 release: "{{ ansible_date_time.date }}"
 #release: 2101
 base_name: "{{ prefix }}-{{ type }}-{{ release }}"
