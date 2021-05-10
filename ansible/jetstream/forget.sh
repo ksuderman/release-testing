@@ -23,7 +23,7 @@ function connect_to_server() {
 	exit 1
 }
 
-for ip in $(cat inventories/$INV | grep _host | cut -d= -f2) ; do
+for ip in $(cat $INV | grep _host | cut -d= -f2) ; do
 	ssh-keygen -R $ip
 	#ssh -i ~/.ssh/ks-cluster.pem -o "StrictHostKeyChecking no" ubuntu@$ip uname -a
 	connect_to_server $ip

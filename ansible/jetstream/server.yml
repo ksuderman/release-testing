@@ -1,17 +1,17 @@
 ---
 - hosts: localhost
   vars:
-    config: server
+    config: single-node
   vars_files:
     - configs/{{ config }}.yml
     - vars/networks.yml
   tasks:
     - name: Create the server
       block:
-        - name: Create the server for {{ server }}
+        - name: Create the server for {{ base_name }}
           os_server:
             state: present
-            name: "{{ server }}"
+            name: "{{ base_name }}"
             image: "{{ images.ubuntu }}"
             flavor: "{{ flavor }}"
             key_name: "{{ keypair }}"
@@ -23,15 +23,15 @@
         - name: Generate the inventory
           template:
             src: templates/single-node-cluster.ini.j2
-            dest: inventories/{{ inventory }}
+            dest: outputs/inventories/{{ inventory }}
         - name: Display IP assigned to server
           debug:
             msg: "Server IP:  {{ rc.server.interface_ip }}"
     - name: Cleanup
       block:
-        - name: Delete the server {{ server }}
+        - name: Delete the server {{ base_name }}
           os_server:
-            name: "{{ server }}"
+            name: "{{ base_name }}"
             state: absent
       tags: [never, cleanup, clean]
 

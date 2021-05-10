@@ -1,0 +1,27 @@
+nodes:
+  - address: {{ os_leader.server.public_v4 }}
+    internal_address: {{ os_leader.server.private_v4 }}
+    user: ubuntu
+    ssh_key_path: {{ keypair }}
+    role: [controlplane, etcd]
+{% for item in os_workers.results %}
+  - address: {{ item.server.public_v4 }}
+    internal_address: {{ item.server.private_v4 }}
+    user: ubuntu
+    ssh_key_path: {{ keypair }}
+    role: [worker]
+{% endfor %}
+
+services:
+  etcd:
+    snapshot: true
+    creation: 6h
+    retention: 24h
+
+# Required for external TLS termination with
+# ingress-nginx v0.22+
+ingress:
+  provider: nginx
+  options:
+    use-forwarded-headers: "true"
+

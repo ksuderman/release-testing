@@ -40,13 +40,18 @@
           keypair_file: ~/.ssh/{{ keypair }}.pem
         template:
           src: templates/rancher.ini.j2
-          dest: inventories/{{ inventory }}
+          dest: outputs/inventories/{{ inventory }}
+      - name: Generate the RKE cluster configuration
+        template:
+          src: templates/rancher-cluster.yml.j2
+          dest: outputs/rke-cluster.yml
     - name: Cleanup the cluster
       tags: [never, cleanup, clean]
       block:
         - name: Delete the controller VM
           os_server:
             name: "ks-rke-leader"
+            state: absent
         - name: Delete the worker nodes
           os_server:
             name: ks-rke-worker-{{ item }}

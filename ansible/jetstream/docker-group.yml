@@ -1,0 +1,13 @@
+---
+- hosts: rke_cluster
+  become: true
+  tasks:
+    - name: Add the docker group.
+      group:
+        name: docker
+        state: present
+    - name: Add the {{ ansible_ssh_user }} user to the docker group
+      user:
+        name: "{{ ansible_ssh_user }}"
+        groups: docker
+        append: yes

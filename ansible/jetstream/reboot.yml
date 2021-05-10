@@ -2,17 +2,20 @@
 - hosts: rke_cluster
   become: true
   tasks:
-#    - name: Wait for the auto-update Ubuntu does on first boot.
-#      shell: while fuser /var/lib/dpkg/{{ item }} >/dev/null 2>&1 ; do sleep 1 ; done
-#      loop:
-#        - lock
-#        - lock.frontend
-    - name: Copy the wait script to the server(s)
-      copy:
-        src: files/wait.sh
-        dest: /tmp/wait.sh
-        mode: 0754
-    - name: Wait for updates to complete
-      shell: /tmp/wait.sh
+    - name: Wait for the auto-update Ubuntu does on first boot.
+      shell: while sudo fuser /var/lib/dpkg/{{ item }} >/dev/null 2>&1 ; do sleep 1 ; done
+      loop:
+        - lock
+        - lock.frontend
+    - name: Script based wait
+      tags: [never, script]
+      block:
+      - name: Copy the wait script to the server(s)
+        copy:
+          src: files/wait.sh
+          dest: /tmp/wait.sh
+          mode: 0754
+      - name: Wait for updates to complete
+        shell: /tmp/wait.sh
     - name: Reboot!
       reboot:

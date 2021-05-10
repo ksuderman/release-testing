@@ -1,0 +1,15 @@
+---
+prefix: ks
+type: rke-single
+#release: "{{ ansible_date_time.date }}"
+release: helm-test
+base_name: "{{ prefix }}-{{ type }}-{{ release }}"
+keypair: ks-cluster
+master_flavor: m1.quad
+flavor: m1.medium
+firewall: ks-rancher-firewall
+workers: 3
+inventory: single-node.ini
+images:
+  centos: 4e769e39-2ffa-4c64-99f6-404fd52cc85e
+  ubuntu: 8bc9412c-e666-40fa-8254-f8481e344a49
