@@ -1,7 +1,7 @@
 ---
 - hosts: localhost
   vars:
-    config: single-node
+    config: rke-lb
   vars_files:
     - configs/{{ config }}.yml
     - vars/networks.yml

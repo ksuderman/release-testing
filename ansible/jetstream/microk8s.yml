@@ -1,0 +1,39 @@
+---
+# Requires: ansible-galaxy collection install community.general
+# Configure a group of nodes as a Kubernetes cluster with microk8s.io
+- hosts: nodes
+  become: yes
+  collections:
+    - community.general
+  vars:
+    addons: "dashboard dns helm3 host-access ingress metrics-server openebs portainer prometheus rbac storage"
+  tasks:
+    - name: Install microk8s
+      snap:
+        name: microk8s
+        channel: "1.21"
+        classic: yes
+    - name: Add ubuntu to the microk8s group
+      user:
+        name: ubuntu
+        groups: microk8s
+        append: yes
+    - name: Make user ubuntu owns ~/.kube
+      file:
+        path: "~/.kube"
+        owner: ubuntu
+        state: directory
+    - name: Enable addons
+      shell: microk8s enable {{ addons }}
+- hosts: nodes[0]
+  tasks:
+    - name: Get the join command for the cluster.
+      shell: microk8s add-node
+      register: rc
+    - name: Save the join command
+      set_fact:
+        join_command: "{{ rc.stdout_lines[1] }}"
+- hosts: nodes[1:]
+  tasks:
+    - name: Have nodes join the cluster
+      shell: "{{ hostvars[groups['nodes'][0]]['join_command'] }}"

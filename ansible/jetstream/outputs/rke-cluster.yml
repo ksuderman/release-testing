@@ -1,21 +1,21 @@
 nodes:
   - address: 149.165.169.203
-    internal_address: 10.0.0.4
+    internal_address: 10.0.0.8
     user: ubuntu
     ssh_key_path: ks-cluster
     role: [controlplane, etcd]
   - address: 149.165.170.177
-    internal_address: 10.0.0.5
+    internal_address: 10.0.0.6
     user: ubuntu
     ssh_key_path: ks-cluster
     role: [worker]
   - address: 149.165.171.46
-    internal_address: 10.0.0.11
+    internal_address: 10.0.0.5
     user: ubuntu
     ssh_key_path: ks-cluster
     role: [worker]
   - address: 149.165.170.39
-    internal_address: 10.0.0.7
+    internal_address: 10.0.0.4
     user: ubuntu
     ssh_key_path: ks-cluster
     role: [worker]

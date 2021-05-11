@@ -1,0 +1,15 @@
+---
+prefix: ks
+type: rke-lb
+#release: "{{ ansible_date_time.date }}"
+release: helm-test
+base_name: "{{ prefix }}-{{ type }}"
+keypair: ks-cluster
+master_flavor: m1.small
+flavor: m1.small
+firewall: ssh_http_https
+workers: 1
+inventory: rke-lb.ini
+images:
+  centos: 4e769e39-2ffa-4c64-99f6-404fd52cc85e
+  ubuntu: 8bc9412c-e666-40fa-8254-f8481e344a49

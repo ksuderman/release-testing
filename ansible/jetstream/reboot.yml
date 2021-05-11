@@ -1,5 +1,5 @@
 ---
-- hosts: rke_cluster
+- hosts: nodes
   become: true
   tasks:
     - name: Wait for the auto-update Ubuntu does on first boot.

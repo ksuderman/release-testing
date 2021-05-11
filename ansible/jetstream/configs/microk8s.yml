@@ -1,0 +1,12 @@
+---
+inventory: microk8s.ini
+server: ks-microk8s
+node_name: "{{ server }}"
+keypair: ks-cluster
+flavor: m1.medium
+firewall: ks-rancher-firewall
+workers: 3
+volume_size: 250
+images:
+  centos: 4e769e39-2ffa-4c64-99f6-404fd52cc85e
+  ubuntu: 8bc9412c-e666-40fa-8254-f8481e344a49

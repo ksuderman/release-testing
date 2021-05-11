@@ -6,7 +6,7 @@ release: may10
 base_name: "{{ prefix }}-{{ type }}-{{ release }}"
 keypair: ks-cluster
 master_flavor: m1.quad
-flavor: m1.quad
+flavor: m1.medium
 firewall: ks-rancher-firewall
 workers: 3
 inventory: rancher.ini

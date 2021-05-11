@@ -4,7 +4,7 @@
     firewall: ks-rancher-firewall
     ports: "22 80 443 2379 2380 6443 8472 9099 10250 10254"
   tasks:
-  - name: Configure the firewall
+  - name: Configure the firewall {{ firewall }}
     block:
     - name: Create the security group
       os_security_group:
@@ -28,4 +28,4 @@
       - os_security_group:
           name: "{{ firewall }}"
           state: absent
-    tags: [never, cleanup]
+    tags: [never, clean, cleanup]
