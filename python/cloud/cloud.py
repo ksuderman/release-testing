@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import argparse
 from settings import *
 from cloudbridge.factory import ProviderList
 
@@ -31,20 +32,25 @@ def keypair_create(cloud, options):
 
 
 def keypair_delete(cloud, options):
-    if len(options) != 1:
-        print("ERROR: keypair delete expects one parameter, the name of the keypair to delete.")
-        return
+    parser = argparse.ArgumentParser(description='Delete a keypair from the cloud provider', prog=f'{sys.argv[0]} <cloud> keypair delete')
+    parser.add_argument('-f', '--force', action='store_true', help='delete the remote keypair even if we do not have a copy of the private key')
+    parser.add_argument('name', type=str, help='the name of the keypair to delete')
+    args = parser.parse_args(options)
+
+    # if len(options) != 1:
+    #     print("ERROR: keypair delete expects one parameter, the name of the keypair to delete.")
+    #     return
     home = os.environ.get('HOME')
-    filename = options[0] + '.pem'
-    path = os.path.join(home, '.ssh', filename)
-    if not os.path.exists(path):
+    path = os.path.join(home, '.ssh', args.name + '.pem')
+    if os.path.exists(path):
+        os.remove(path)
+        print(f'Deleted local key file {path}')
+    elif not args.force:
         print(f'No local key found. Refusing to delete remote keypair!')
         return
 
-    os.remove(path)
-    print(f'Deleted local key file {path}')
-    cloud.provider.security.key_pairs.delete(options[0])
-    print(f'Deleted keypair {options[0]}')
+    cloud.provider.security.key_pairs.delete(args.name)
+    print(f'Deleted keypair {args.name}')
 
 
 def keypair_list(cloud, options):
@@ -55,18 +61,32 @@ def keypair_list(cloud, options):
 
 
 def instance_create(cloud, options):
-    print("instance_create")
+    parser = argparse.ArgumentParser(description='Provision a new instance.', prog=f'{sys.argv[0]} <cloud> instance create')
+    parser.add_argument('-k', '--keypair', help='the keypair to use for the instance', required=True)
+    parser.add_argument('-c', '--network', help='the name of the cluster the instance will be assigned to', required=True)
+    parser.add_argument('-n', '--name', help='a name for the instance.', required=True)
+    args = parser.parse_args(options)
+    cloud.create_instance(name=args.name, kp_name=args.keypair, cluster=args.network)
 
 
 def instance_delete(cloud, options):
-    print("instance_delete")
+    # parser = argparse.ArgumentParser(description='Delete an instance.', prog=f'{sys.argv[0]} <cloud> instance delete')
+    # parser.add_argument('-c', '--cluster', dest='cluster', help='the name of the cluster containing the instance', required=True)
+    # parser.add_argument('-n', '--name', dest='name', help='a name for the instance.', required=True)
+    # args = parser.parse_args(options)
+    # name = args.cluster + '-' + args.name
+    if len(options) != 1:
+        print('ERROR: instance delete requires exactly one parameter, the name of the instance to delete.')
+        return
+    # print(f'Deleting instance {options[0]}')
+    cloud.delete_instance(name=options[0])
 
 
 def instance_list(cloud, options):
     # print("instance_list")
     print('Instances:')
     for instance in cloud.provider.compute.instances.list():
-        print(f'    {instance.id} - {instance.label}')
+        print(f'    {instance.id} - {instance.label : >}')
     print()
 
 def image_set(cloud, options):
@@ -122,14 +142,18 @@ handlers = {
     }
 }
 
+# Used to validate command line parameters.
 resources = [ 'network', 'keypair', 'instance', 'cluster', 'image', 'vm']
 commands = [ 'create', 'delete', 'list', 'set', 'get', 'help' ]
-clouds = [ProviderList.AWS, ProviderList.GCP, ProviderList.OPENSTACK, ProviderList.MOCK]
+clouds = [ProviderList.AWS, ProviderList.GCP, ProviderList.OPENSTACK, ProviderList.MOCK, 'os']
+
+# Map the command line parameter to an object constructor.
 cloud_constructors = {
     ProviderList.AWS: AWS,
     ProviderList.GCP: GCP,
     ProviderList.OPENSTACK: OpenStack,
-    ProviderList.MOCK: Mock
+    ProviderList.MOCK: Mock,
+    'os': OpenStack
 }
 
 def get_cloud_provider(cloud):
@@ -138,11 +162,12 @@ def get_cloud_provider(cloud):
     print(f'Nothing provides {cloud} services')
     return None
 
+
 END = '\033[0m'
 BOLD = '\033[1m'
-
 def bold(s):
     return BOLD + s + END
+
 
 help_text = f'''
 {bold('SYNOPSIS')}
@@ -272,19 +297,20 @@ if __name__ == "__main__":
         print(f"{params.command} not in resource_handlers. This error should have been caught by now...")
         sys.exit(1)
 
-    params.print()
     handler = resource_handler.get(params.command)
     cp = get_cloud_provider(params.cloud)
     if cp is None:
-        print('WTF')
+        print(f'Cloud provider not found: {params.cloud}')
         sys.exit(1)
     handler(cp, params.options)
 
 
 '''
+These are just some notes regarding what the commands _should_ look like.
+
 cloud aws keypair create ks-galaxy-aws
 cloud aws network create ks-testing-apr23
-cloud aws instance create --keypair ks-galaxy-aws --name node-1 --vm m1.2xlarge
+cloud aws instance create --keypair ks-galaxy-aws --name node-1
 cloud aws instance list
 
 network
@@ -303,97 +329,3 @@ cluster
 - create [-n|--name] <name> [-s|--size] <num_nodes>
 - delete [-n|--name] <name>
 '''
-# network = provider.networking.networks.create(cidr_block='10.0.0.0/16', label='ks-test-network-feb17')
-# print(network)
-# networks = provider.networking.networks.list()
-# if networks is None:
-#     print("Network not found")
-# else:
-#     print(f"Found {len(networks)} networks.")
-#     for network in networks:
-#         print(f"Network {network.label} {network.id}")
-
-# walls = provider.security.vm_firewalls.list() #('37d6a311-7be9-4ab2-858c-9bef77900d2f')
-# for fw in walls:
-#     print(f"{fw.id} {fw.label} {fw.name}")
-#
-# print(provider.security.vm_firewalls.find(label="release-testing"))
-
-#
-# routers = provider.networking.routers.list()
-# if routers is None:
-#     print("No router found.")
-# else:
-#     print(f"Found {len(routers)} routers")
-#     for router in routers:
-#         print(f"Router {router.label} {router.id}")
-#
-# print(provider.networking.routers.get('472ecf62-7d6b-4456-9b9e-ac25ebbec010'))
-#
-# for net in provider.neutron.list_networks('public'):
-#     print(net)
-
-def run(params):
-    if params.cloud == ProviderList.AWS:
-        cloud = AWS()
-    elif params.cloud == ProviderList.GCP:
-        cloud = GCP()
-    elif params.cloud == ProviderList.OPENSTACK:
-        cloud = OpenStack()
-    else:
-        print(f"Invalid cloud provider name {params.cloud}")
-        return
-
-
-def ignored():
-    image_name = 'Ubuntu Server 20.04 LTS'
-    # provider = CloudProviderFactory().create_provider(ProviderList.OPENSTACK, {})
-    images = cloud.provider.compute.images.find(label=f'{image_name}*')
-    print(cloud.image)
-    # images = [ image for image in images if image.name == image_name]
-    for image in images:
-        print(f'ID   : {image.id}')
-        print(f'Name : {image.name}')
-        print(f'Label: {image.label}')
-        print(f'Desc : {image.description}')
-        print()
-
-'''
-def get_keypair():
-    cloud = AWS()
-    kp = cloud.get_keypair('ks-galaxy-aws')
-    print(kp)
-
-
-def create_network():
-    cloud = AWS()
-    cloud.initialize('foo')
-    print("The cloud networking services have been initialized")
-
-
-def delete_network():
-    cloud = AWS()
-    # cloud.initialize()
-    cloud.tear_down(cloud_name)
-    print("Cloud networking services have been deleted.")
-
-
-def list_firewalls():
-    cloud = AWS(cloud_name)
-    firewalls = cloud.provider.security.vm_firewalls.list()
-    print(f"Found {len(firewalls)} firewalls.")
-    for fw in firewalls:
-        print(f"{fw.id} {fw.label}")
-    print()
-    print('Cloud firewalls')
-    for fw in cloud.firewalls():
-        print(f'{fw.id} {fw.label}')
-    if cloud.gateway is None:
-        print("No gateway configured")
-    else:
-        print('\nFloating IPs')
-        for ip in cloud.gateway.floating_ips.list():
-            print(ip)
-        print()
-'''
-
